@@ -25,9 +25,10 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
@@ -36,25 +37,20 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract project
+      - name: Extract RAID VAULT
         run: |
           unzip -q raid-vault-cloud-build.zip -d extracted
-
-      - name: Locate project
-        run: |
-          PROJECT_DIR=$(find extracted -type f -name settings.gradle.kts -o -name settings.gradle | head -1 | xargs dirname)
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-          echo "Project found: $PROJECT_DIR"
+          ls -la extracted/raid-vault-android
 
       - name: Build APK
         run: |
-          gradle --no-daemon -p "$PROJECT_DIR" :app:assembleDebug
+          gradle --no-daemon -p extracted/raid-vault-android :app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: RAID-VAULT-APK
-          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk
+          path: extracted/raid-vault-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
           
