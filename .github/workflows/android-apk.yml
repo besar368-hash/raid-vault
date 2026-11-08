@@ -52,10 +52,10 @@ jobs:
       - name: Find and extract Android project
         shell: bash
         run: |
-          ZIP_PATH=$(find . -type f -name 'RAID-VAULT-Android-Project.zip' -print -quit)
+          ZIP_PATH=$(find . -type f -name 'RAID-VAULT-Updated-Source.zip' -print -quit)
 
           if [ -z "$ZIP_PATH" ]; then
-            echo "ERROR: RAID-VAULT-Android-Project.zip is missing."
+            echo "ERROR: RAID-VAULT-Updated-Source.zip is missing."
             find . -maxdepth 3 -type f
             exit 1
           fi
