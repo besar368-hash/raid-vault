@@ -35,9 +35,7 @@ jobs:
             exit 1
           fi
 
-          echo "Found sdkmanager at: $SDKMANAGER"
-
-          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses || true
 
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" \
             "platform-tools" \
@@ -49,8 +47,21 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract project
-        run: unzip -q raid-vault-cloud-build.zip -d extracted
+      - name: Find and extract project ZIP
+        shell: bash
+        run: |
+          ZIP_PATH=$(find . -type f -name 'raid-vault-cloud-build.zip' -print -quit)
+
+          if [ -z "$ZIP_PATH" ]; then
+            echo "ERROR: raid-vault-cloud-build.zip is missing from repository."
+            echo "Repository files:"
+            find . -maxdepth 3 -type f | head -100
+            exit 1
+          fi
+
+          echo "Found ZIP: $ZIP_PATH"
+          mkdir -p extracted
+          unzip -q "$ZIP_PATH" -d extracted
 
       - name: Find Android project
         shell: bash
@@ -59,10 +70,12 @@ jobs:
 
           if [ -z "$PROJECT_DIR" ]; then
             echo "ERROR: Android project not found."
+            find extracted -maxdepth 4 -type f
             exit 1
           fi
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Android project found: $PROJECT_DIR"
 
       - name: Build APK
         run: gradle --no-daemon -p "$PROJECT_DIR" :app:assembleDebug
